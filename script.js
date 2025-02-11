@@ -1,37 +1,60 @@
 document.addEventListener("DOMContentLoaded", loadTasks);
 
 function addTask() {
-    let taskInput = document.getElementById("taskInput");
-    let taskText = taskInput.value.trim();
+    const taskInput = document.getElementById("taskInput");
+    const taskText = taskInput.value.trim();
     if (taskText === "") return;
 
-    let li = document.createElement("li");
-    li.className = "list-group-item d-flex justify-content-between align-items-center";
-    li.innerHTML = `${taskText} <button class="btn btn-warning btn-sm" onclick="editTask(this)">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteTask(this)">❌</button>`;
-    li.onclick = function () { li.classList.toggle("completed"); saveTasks(); };
+    const li = createTaskElement(taskText);
     document.getElementById("taskList").appendChild(li);
     
     taskInput.value = "";
     saveTasks();
 }
 
-function editTask(button) {
-    let li = button.parentElement;
-    let currentText = li.firstChild.textContent.trim();
-    let newText = prompt("Edit your task:", currentText);
+function createTaskElement(taskText) {
+    const li = document.createElement("li");
+    li.className = "list-group-item d-flex justify-content-between align-items-center";
+    li.textContent = taskText;
+
+    const editButton = document.createElement("button");
+    editButton.className = "btn btn-warning btn-sm";
+    editButton.textContent = "✏️";
+    editButton.addEventListener("click", () => editTask(li));
+
+    const deleteButton = document.createElement("button");
+    deleteButton.className = "btn btn-danger btn-sm";
+    deleteButton.textContent = "❌";
+    deleteButton.addEventListener("click", () => deleteTask(li));
+
+    li.appendChild(editButton);
+    li.appendChild(deleteButton);
+    li.addEventListener("click", () => toggleTaskCompletion(li));
+
+    return li;
+}
+
+function editTask(li) {
+    const currentText = li.firstChild.textContent.trim();
+    const newText = prompt("Edit your task:", currentText);
     if (newText !== null && newText.trim() !== "") {
-        li.firstChild.textContent = newText.trim() + " ";
+        li.firstChild.textContent = newText.trim();
         saveTasks();
     }
 }
 
-function deleteTask(button) {
-    button.parentElement.remove();
+function deleteTask(li) {
+    li.remove();
+    saveTasks();
+}
+
+function toggleTaskCompletion(li) {
+    li.classList.toggle("completed");
     saveTasks();
 }
 
 function saveTasks() {
-    let tasks = [];
+    const tasks = [];
     document.querySelectorAll("#taskList li").forEach(li => {
         tasks.push({ text: li.firstChild.textContent.trim(), completed: li.classList.contains("completed") });
     });
@@ -39,13 +62,10 @@ function saveTasks() {
 }
 
 function loadTasks() {
-    let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+    const tasks = JSON.parse(localStorage.getItem("tasks")) || [];
     tasks.forEach(task => {
-        let li = document.createElement("li");
-        li.className = "list-group-item d-flex justify-content-between align-items-center";
-        li.innerHTML = `${task.text} <button class="btn btn-warning btn-sm" onclick="editTask(this)">✏️</button> <button class="btn btn-danger btn-sm" onclick="deleteTask(this)">❌</button>`;
+        const li = createTaskElement(task.text);
         if (task.completed) li.classList.add("completed");
-        li.onclick = function () { li.classList.toggle("completed"); saveTasks(); };
         document.getElementById("taskList").appendChild(li);
     });
 }
